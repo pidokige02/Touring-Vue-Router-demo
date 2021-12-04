@@ -27,7 +27,7 @@ export default {
       // when this link is clicked, it calls this.$router.push({name: 'About'})
 
       this.$router.push({
-        name: 'EventDetails',
+        name: 'EventDetails'
         // Same object we use with router-link
         // Both EventRegister and EventDetails have an:id parameter,
         // which will be used by default when navigaing, as Nested Routes.

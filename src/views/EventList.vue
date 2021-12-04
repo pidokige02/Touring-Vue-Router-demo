@@ -28,8 +28,10 @@
 <script>
 import EventCard from '@/components/EventCard.vue'
 import EventService from '@/services/EventService.js'
-import { watchEffect } from 'vue'
-// in order to make an API call, whenever page is updated.
+// import watchEffect in order to make an API call, whenever page is updated.
+// import { watchEffect } from 'vue' // commented out @lesson9
+// need to npm install nprogress
+import NProgress from 'nprogress'
 
 export default {
   name: 'EventList',
@@ -43,25 +45,65 @@ export default {
       totalEvents: 0 // Only show the Next page link when there is a Next page.
     }
   },
-  created() {
-    watchEffect(() => {
-      // When reactive objects that are accessed inside this function change,
-      // run this funcion again.
-      this.events = null // Clear out the events on the page,
-      //so our user knows the API has been called.
-      EventService.getEvents(2, this.page)
-        // 2 : Events per page, this.page : send in the current page from props
-        // this.page is props, which is reactive.
-        .then(response => {
-          this.events = response.data
-          this.totalEvents = response.headers['x-total-count']
-          // total count is captured from header
+  // below created() is commented out @lesson 9
+  // created() {
+  //   watchEffect(() => {
+  //     // When reactive objects that are accessed inside this function change,
+  //     // run this funcion again.
+  //     this.events = null // Clear out the events on the page,
+  //     //so our user knows the API has been called.
+  //     EventService.getEvents(2, this.page)
+  //       // 2 : Events per page, this.page : send in the current page from props
+  //       // this.page is props, which is reactive.
+  //       .then(response => {
+  //         this.events = response.data
+  //         this.totalEvents = response.headers['x-total-count']
+  //         // total count is captured from header
+  //       })
+  //       .catch(() => {
+  //         this.$router.push({ name: 'NetworkError' })
+  //       })
+  //   })
+  // },
+  beforeRouteEnter(routeTo, routeFrom, next) {
+    // Since the component isn't loaded yet, we have no access to this.
+    NProgress.start()
+    // Parse the page number from the route we're navigating to.
+    EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
+      .then(response => {
+        next(comp => {
+          // Continue routing and once component is loaded, set these values
+          // I'm using comp (as in component) in the docs you'll see vm
+          comp.events = response.data
+          comp.totalEvents = response.headers['x-total-count']
         })
-        .catch(() => {
-          this.$router.push({ name: 'NetworkError' })
-        })
-    })
+      })
+      .catch(() => {
+        // If the API fails, load the NetworkError page
+        next({ name: 'NetworkError' })
+      })
+      .finally(() => {
+        //Whether or not the API succeeds or fails, finish the progress bar
+        NProgress.done()
+      })
   },
+  beforeRouteUpdate(routeTo) {
+    NProgress.start()
+    EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
+      .then(response => {
+        // switch to using this, since the component is already created.
+        this.events = response.data
+        this.totalEvents = response.headers['x-total-count']
+      })
+      .catch(() => {
+        // with Vue Router v4.
+        return { name: 'NetworkError' }
+      })
+      .finally(() => {
+        NProgress.done()
+      })
+  },
+
   computed: {
     hasNextPage() {
       // Find the total number of pages
