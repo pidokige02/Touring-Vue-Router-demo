@@ -21,7 +21,7 @@
         >Next &#62;</router-link
       >
       <!-- Next > -->
-    </div>          
+    </div>
   </div>
 </template>
 
@@ -40,26 +40,26 @@ export default {
   data() {
     return {
       events: null,
-      totalEvents: 0  // Only show the Next page link when there is a Next page.
+      totalEvents: 0 // Only show the Next page link when there is a Next page.
     }
   },
   created() {
     watchEffect(() => {
-    // When reactive objects that are accessed inside this function change,
-    // run this funcion again.  
-    this.events = null// Clear out the events on the page, 
-                      //so our user knows the API has been called.
-    EventService.getEvents(2, this.page) 
-    // 2 : Events per page, this.page : send in the current page from props
-    // this.page is props, which is reactive.
-      .then(response => {
-        this.events = response.data
-        this.totalEvents = response.headers['x-total-count']
-        // total count is captured from header 
-      })
-      .catch(error => {
-        console.log(error)
-      })
+      // When reactive objects that are accessed inside this function change,
+      // run this funcion again.
+      this.events = null // Clear out the events on the page,
+      //so our user knows the API has been called.
+      EventService.getEvents(2, this.page)
+        // 2 : Events per page, this.page : send in the current page from props
+        // this.page is props, which is reactive.
+        .then(response => {
+          this.events = response.data
+          this.totalEvents = response.headers['x-total-count']
+          // total count is captured from header
+        })
+        .catch(() => {
+          this.$router.push({ name: 'NetworkError' })
+        })
     })
   },
   computed: {
@@ -97,5 +97,4 @@ export default {
 #page-next {
   text-align: right;
 }
-
 </style>

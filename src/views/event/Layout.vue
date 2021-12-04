@@ -15,7 +15,6 @@
   </div>
 </template>
 
-
 <script>
 import EventService from '@/services/EventService.js'
 export default {
@@ -31,7 +30,16 @@ export default {
         this.event = response.data
       })
       .catch(error => {
-        console.log(error)
+        if (error.response && error.response.status == 404) {
+          // if the event doesn't exist, load 404.
+          this.$router.push({
+            name: '404Resource',
+            params: { resource: 'event' }
+          })
+        } else {
+          //Otherwase assume network error
+          this.$router.push({ name: 'NetworkError' })
+        }
       })
   }
 }
