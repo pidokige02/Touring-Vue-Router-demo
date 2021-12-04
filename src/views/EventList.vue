@@ -31,7 +31,7 @@ import EventService from '@/services/EventService.js'
 // import watchEffect in order to make an API call, whenever page is updated.
 // import { watchEffect } from 'vue' // commented out @lesson9
 // need to npm install nprogress
-import NProgress from 'nprogress'
+// import NProgress from 'nprogress'  // commented from lesson 10 Global and Per-Route Guard
 
 export default {
   name: 'EventList',
@@ -65,9 +65,12 @@ export default {
   //       })
   //   })
   // },
+
+  // Why does beforeRouterUpdate need a return, when beforeRouterEnter doesn't?
+  // it's because next tells Vue Router to wait until the API call returns, before routing.
   beforeRouteEnter(routeTo, routeFrom, next) {
     // Since the component isn't loaded yet, we have no access to this.
-    NProgress.start()
+    // NProgress.start() // commented out from lesson 10
     // Parse the page number from the route we're navigating to.
     EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
       .then(response => {
@@ -82,14 +85,18 @@ export default {
         // If the API fails, load the NetworkError page
         next({ name: 'NetworkError' })
       })
-      .finally(() => {
-        //Whether or not the API succeeds or fails, finish the progress bar
-        NProgress.done()
-      })
+      // .finally(() => { // commented out from lesson 10
+      //   //Whether or not the API succeeds or fails, finish the progress bar
+      //   NProgress.done()
+      // })
   },
   beforeRouteUpdate(routeTo) {
-    NProgress.start()
-    EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
+    // NProgress.start() //commented out from lesson 10
+    // We also need to add return to the beforeRouteUpdate API call. 
+    // Otherwise our router won’t wait for the API call to finish before calling afterEach.
+    // Return the promise so Vue Router knows to wait on the API call before loading the page.
+    // EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
+    return EventService.getEvents(2, parseInt(routeTo.query.page) || 1)  
       .then(response => {
         // switch to using this, since the component is already created.
         this.events = response.data
@@ -99,9 +106,9 @@ export default {
         // with Vue Router v4.
         return { name: 'NetworkError' }
       })
-      .finally(() => {
-        NProgress.done()
-      })
+      // .finally(() => { // commented out from lesson 10
+      //   NProgress.done()
+      // })
   },
 
   computed: {
